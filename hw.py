@@ -1,14 +1,3 @@
-'''
-<post>
-client가 sever한테 url과 comment를 주면
-server는 url과 comment를 가지고 title, image, description 크롤링 진행
-
-<get>
-크롤링 한 것을 가지고 db의 저장된 length만큼 for문을 돌려서
-title, image, description, url, comment를 카드에 저장
-
-'''
-
 from flask import Flask, render_template, jsonify, request
 app = Flask(__name__)
 
