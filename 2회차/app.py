@@ -18,8 +18,10 @@ def index():
 def save_post():
     title_receive = request.form['title_give']
     content_receive = request.form['content_give']
-    for i in range(len(title_receive)):
-        idxx = i
+
+    num = 0
+    idxx = num+1
+
     ## db에 저장하기
     doc = {
         'idx' : idxx,
@@ -37,8 +39,8 @@ def get_post():
 
 @app.route('/post', methods=['DELETE'])
 def delete_post():
-    name_received = request.form["idx"]
-    db.memo.delete_one({'idx':name_received})
+    idx_received = request.form["idx_give"]
+    db.memo.delete_one({'idx':idx_received})
     return jsonify({'msg': '삭제되었습니다!'})
 
 
