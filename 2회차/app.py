@@ -3,7 +3,8 @@ from pymongo import MongoClient
 from datetime import datetime
 
 now = datetime.now()
-reg_date = (now.year, ".", now.month, ".", now.day, " ", now.hour, ":", now.minute, ":", now.second)
+reg_date = "{}.{}.{} {}:{}:{}".format(now.year, now.month,  now.day,  now.hour,  now.minute, now.second)
+
 app = Flask(__name__)
 
 client = MongoClient("mongodb://localhost:27017/")
