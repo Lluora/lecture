@@ -97,7 +97,7 @@
                         let posting = response["result"]
 
                         for (let i=0; i < posting.length; i++) { //let 꼭 붙이기 !!
-                            let idx = posting[i]['idx']
+                            let index = i+1
                             let title = posting[i]['title']
                             let content = posting[i]['content']
                             let date = posting[i]['reg_date']
@@ -105,10 +105,10 @@
 
                             // 카드를 붙여줄려면 항상 temp_html 만들기
                            let temp_html = `<tr>
-                                              <th scope="row">${idx}</th>
+                                              <th scope="row">${index}</th>
                                               <th scope="row">${title}</th>
                                               <th scope="row">${date}</th>
-                                              <td><button  class="btn btn-outline-secondary" onclick="deleteArticle('${idx}')" type="button">삭제</button></td>
+                                              <td><button  class="btn btn-outline-secondary" onclick="deleteArticle('${index}')" type="button">삭제</button></td>
                                             </tr>
                                             </tr>`
 
@@ -122,11 +122,11 @@
         function makeListPost(post, index) {
         }
 
-        function deleteArticle(idx) {
+        function deleteArticle(index) {
                    $.ajax({
                     type: 'DELETE',
                     url: '/post',
-                    data: {idx_give: idx}, // 가져갈 데이터 : 이름을 가져간다.
+                    data: {idx_give: index}, // 가져갈 데이터 : 이름을 가져간다.
                     success: function (response) { // 성공하면
                            alert(response['msg']);
                         window.location.reload() // 새로고침

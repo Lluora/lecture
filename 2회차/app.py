@@ -19,12 +19,8 @@ def save_post():
     title_receive = request.form['title_give']
     content_receive = request.form['content_give']
 
-    num = 0
-    idxx = num+1
-
     ## db에 저장하기
     doc = {
-        'idx' : idxx,
         'title': title_receive,
         'content': content_receive,
         'reg_date': reg_date,
@@ -34,13 +30,13 @@ def save_post():
 
 @app.route('/post', methods=['GET'])
 def get_post():
-    post = list(db.memo.find({}, {'_id': False}).sort("idx"))
+    post = list(db.memo.find({}, {'_id': False}).sort("reg_date", -1))
     return {"result": post}
 
 @app.route('/post', methods=['DELETE'])
 def delete_post():
-    idx_received = request.form["idx_give"]
-    db.memo.delete_one({'idx':idx_received})
+    idx_received = request.form["index_give"]
+    db.memo.delete_one({'index':idx_received})
     return jsonify({'msg': '삭제되었습니다!'})
 
 
