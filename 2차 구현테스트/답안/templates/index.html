@@ -112,7 +112,7 @@
                       <th scope="row">${index + 1}</th>
                       <td>${post['title']}</td>
                       <td>${post['reg_date']}</button></td>
-                      <td><button type="button" class="btn btn-danger"제 onclick="deleteArticle(${post['idx']})">삭제</button></td>
+                      <td><button type="button" class="btn btn-danger" onclick="deleteArticle(${post['idx']})">삭제</button></td>
                       </tr>
                     `;
             $("#list-post").append(tempHtml);
