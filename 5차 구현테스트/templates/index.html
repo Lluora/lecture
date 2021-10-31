@@ -25,7 +25,7 @@
     <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
 
 
-    <title>스파르타코딩클럽 | 나홀로 메모장</title>
+    <title>내배캠 | 질문합시다</title>
 
     <!-- style -->
     <style type="text/css">
@@ -50,48 +50,38 @@
             border: black solid;
             border-radius: 5px;
         }
-
-        #inputsearch {
-            width: 450px;
-            margin: auto;
-        }
-
     </style>
     <script>
-        let order = "asc"; // 기본 설정?
+
+        let order = "asc";
+        let perPage = "5";
 
         $(document).ready(function () {
-            $("#cards-box").html(""); // HTML 태그를 포함하여 선택한 요소 안의 내용을 가져온다.
-            // https://www.codingfactory.net/10324
-            showArticles(); // 화면에 db 저장된 거 띄우기 위해 db 데이터 불러오기
+            $("#cards-box").html("");
+            showArticles(1);
+            $("#logout").hide()
+            $("#perPagingSelect").change(function () {
+                perPage = $(this).val();
+                showArticles(1)
+
+            })
         });
 
-
         function openClose() {
-            // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
             if ($("#post-box").css("display") == "block") {
-
-                // post-box를 가리고
                 $("#post-box").hide();
-
-                // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
                 $("#btn-post-box").text("포스팅 박스 열기");
             } else {
                 $("#post-url").val('');
                 $("#post-comment").val('');
-
-                // 아니면(눈에 보이지 않으면) post-box를 펴라
                 $("#post-box").show();
-
-                // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
                 $("#btn-post-box").text("포스팅 박스 닫기");
             }
         }
 
-
         function postingArticle() {
-            let url = $("#post-url").val(); // 제목
-            let comment = $("#post-comment").val(); // 간단한 내용
+            let url = $("#post-url").val();
+            let comment = $("#post-comment").val();
             let idx = $("#post-idx").val();
 
             if (idx != '') {
@@ -109,7 +99,6 @@
                     }
                 })
             } else {
-                // memo에 POST 방식으로 메모 생성 요청하기
                 $.ajax({
                     type: "POST",
                     url: "/article",
@@ -117,7 +106,6 @@
                     success: function (response) {
                         if (response["result"] == "success") {
                             alert("포스팅 성공!");
-                            // 성공 시 페이지 새로고침하기
                             window.location.reload();
                         } else {
                             alert("서버 오류!");
@@ -127,24 +115,47 @@
             }
         }
 
-
-        function showArticles() {
+        function showArticles(curPage) {
+            let searchTitle = $("#searchTitle").val();
             $.ajax({
                 type: "GET",
-                url: `/articles?order=${order}`,
+                url: `/articles?perPage=${perPage}&curPage=${curPage}&order=${order}&searchTitle=${searchTitle}`,
                 data: {},
                 success: function (response) {
                     $("#list-post").empty();
-                    let articles = response["articles"]; // db 가져오기
+                    let articles = response["articles"];
+                    let pagingInfo = response["pagingInfo"];
                     for (let i = 0; i < articles.length; i++) {
-                        makeListPost(articles[i], i); // 화면에 띄우는 함수
+                        let num = response["pagingInfo"]["totalCount"] - (perPage * (curPage - 1)) - i
+                        makeListPost(articles[i], num);
                     }
+                    makePaging(pagingInfo);
                 }
             })
         }
 
+        function makePaging(pagingInfo) {
+            let tempHtml = '';
+            for (let i = 0; i < pagingInfo['totalPage']; i++) {
+                if (i + 1 == pagingInfo['curPage']) {
+                    tempHtml += `<li class="page-item active"><a class="page-link" href="#">${i + 1}</a></li>`;
+                } else {
+                    tempHtml += `<li class="page-item"><a class="page-link" href="#" onclick="showArticles(${i + 1})">${i + 1}</a></li>`;
+                }
+            }
+            $("#pagination").html(tempHtml);
+        }
 
-        function getArticle(idx) { // 수정 버튼을 눌렀을 때 실행
+        function searching() {
+            showArticles(1)
+        }
+
+        function loginbutton() {
+            $('#loginModal').modal('show');
+        }
+
+
+        function getArticle(idx) {
             $.ajax({
                 type: "GET",
                 url: `/article?idx=${idx}`,
@@ -161,28 +172,26 @@
             })
         }
 
-
-        function readArticle(idx) {// 제목 눌렀을 때 뜨는 작은 창이 모달
+        function readArticle(idx) {
             $.ajax({
                 type: "PUT",
                 url: `/article/${idx}`,
                 data: {},
                 success: function (response) {
-                    console.log(response['article'])
                     let title = response['article']['title']
                     let content = response['article']['content']
                     $('#modal-title').html(title);
                     $('#modal-content').html(content);
-                    $('#articleModal').modal('show'); // http://bootstrapk.com/javascript/
+                    $('#articleModal').modal('show');
                 }
             })
         }
 
-
-        function makeListPost(post, index) { //화면에 띄우기
+        function makeListPost(post, index) {
             let tempHtml = ` <tr>
-                      <th scope="row">${index + 1}</th>
+                      <th scope="row">${index}</th>
                       <td><a href="#" onclick="readArticle(${post['idx']})">${post['title']}</td>
+                      <td>${post['writer']}</td>
                       <td>${post['reg_date']}</td>
                       <td>${post['read_count']}</td>
                       <td><button type="button" class="btn btn-danger" onclick="deleteArticle(${post['idx']})">삭제</button></td>
@@ -192,7 +201,6 @@
             $("#list-post").append(tempHtml);
         }
 
-
         function deleteArticle(idx) {
             $.ajax({
                 type: "DELETE",
@@ -200,7 +208,6 @@
                 success: function (response) { // 성공하면
                     if (response["result"] == "success") {
                         alert("삭제 성공!");
-                        // 성공 시 페이지 새로고침하기
                         window.location.reload();
                     } else {
                         alert("서버 오류!");
@@ -209,10 +216,9 @@
             })
         }
 
-
-        function setOrder() { // 조회 버튼을 눌렀을 때
-            if (order == "asc") { // order이 asc이면
-                order = "desc"; // desc로 변경
+        function setOrder() {
+            if (order == "asc") {
+                order = "desc";
                 $("#viewOrder").html(`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up-square-fill" viewBox="0 0 16 16">
   <path d="M2 16a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2zm6.5-4.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 1 0z"/>
 </svg>`)
@@ -222,42 +228,49 @@
   <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5a.5.5 0 0 1 1 0z"/>
 </svg>`)
             }
-            showArticles(); // 화면에 db 저장된 거 띄우기 위해 db 데이터 불러오기
+            showArticles(1);
         }
 
+        function addFiles() {
+            $("#upload").append("<input type='file' name='file'>");
+        }
 
-        function search() {
-            let text = $("#titlesearch").val()
-            index = 0
-            $("#list-post").empty()
+        function saveFiles() {
+            var form_data = new FormData($('#upload')[0]);
             $.ajax({
-                type: "GET",
-                url: `/article/input?box=${text}`,
-                success: function (response) { // 성공하면
-                    let article = response['article']
-                    let idx = parseInt(article['idx'])
-                    let title = article['title']
-                    let reg_date = article['reg_date']
-                    let read_count = article['read_count']
+                type: 'POST',
+                url: '/files',
+                data: form_data,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function () {
+                    console.log('Success!');
+                },
+            });
+        }
 
-                    let tempHtml = ` <tr>
-                      <th scope="row">${index + 1}</th>
-                      <td><a href="#" onclick="readArticle(${idx})">${title}</td>
-                      <td>${reg_date}</td>
-                      <td>${read_count}</td>
-                      <td><button type="button" class="btn btn-danger" onclick="deleteArticle(${idx})">삭제</button></td>
-                      <td><button type="button" class="btn btn-primary" onclick="getArticle(${idx})">수정</button></td>
-                      </tr>
-                    `;
-
-                    $("#list-post").append(tempHtml);
-
-                    if ($("#titlesearch").val("")) {
-                        makeListPost();
-                    }
-                }
+        function saveid() {
+            id = $("#post-id").val()
+            pw = $("#post-pw").val()
+            alert("로그인 해주세요!!")
+            $("#loginModal").hide()
+            window.location.reload()
+            $.ajax({
+                type: "POST",
+                url: "/article",
+                data: {id: id},
             })
+        }
 
+        function login_button1() {
+            $("#loginbuttonModal").show()
+        }
+
+        function loginid() {
+            alert("로그인 되었습니다!!")
+            $("#idgroup").empty()
+            $("#loginbuttonModal").hide()
 
         }
 
@@ -268,11 +281,14 @@
 <body>
 <div class="wrap">
     <div class="jumbotron">
-        <h1 class="display-4">나홀로 메모장!</h1>
+        <h1 class="display-4">질문합시다!!</h1>
         <hr class="my-4">
-        <p class="lead">
+        <p class="lead" id="idgroup">
             <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary">포스팅 박스 열기
             </button>
+            <button type="button" id="login" class="btn btn-secondary" onclick="login_button1()">로그인</button>
+            <button type="button" id="pw-bu" class="btn btn-success" onclick="loginbutton()">회원가입</button>
+            <button type= "button" id = "logout" class = "btn btn-danger" hi>로그아웃</button>
         </p>
     </div>
     <div id="post-box" class="form-post" style="display:none">
@@ -286,19 +302,22 @@
                 <textarea id="post-comment" class="form-control" rows="2"></textarea>
             </div>
             <input id="post-idx" class="form-control" placeholder="" hidden>
-            <!-- http://tcpschool.com/html-input-types/hidden -->
-            <!-- <input type=“hidden”>은 사용자에게는 보이지 않는 숨겨진 입력 필드를 정의 -->
-
             <button type="button" class="btn btn-primary" onclick="postingArticle()">기사저장</button>
         </div>
     </div>
-
-
+    <div class="input-group mb-3" style="width: 10%;margin: 0% 90%;">
+        <select class="custom-select" id="perPagingSelect">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+        </select>
+    </div>
     <table class="table">
         <thead>
         <tr>
             <th scope="col">#</th>
             <th scope="col">제목</th>
+            <th scope="col">글쓴이</th>
             <th scope="col">날짜</th>
             <th scope="col">조회<span onclick="setOrder()" id="viewOrder">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -310,12 +329,22 @@
             <th scope="col">수정</th>
         </tr>
         </thead>
-        <div id="hello">
-            <tbody id="list-post">
-            </tbody>
-        </div>
+        <tbody id="list-post">
+        </tbody>
     </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination" style="justify-content: center; " id="pagination">
+        </ul>
+    </nav>
+    <div class="input-group mb-3" style="width: 40%;margin: 0% 30%;">
+        <input type="text" class="form-control" placeholder="제목" aria-label="제목"
+               aria-describedby="basic-addon2" id="searchTitle">
+        <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" onclick="searching()">검색</button>
+        </div>
+    </div>
 </div>
+
 <!-- Modal -->
 <div class="modal fade" id="articleModal" tabindex="-1" role="dialog" aria-labelledby="articleModalLabel"
      aria-hidden="true">
@@ -336,17 +365,77 @@
     </div>
 </div>
 
-<footer>
 
-    <div class="input-group mb-3" id="inputsearch">
-        <input type="text" id="titlesearch" class="form-control" placeholder="제목" aria-label="Recipient's username"
-               aria-describedby="basic-addon2">
-        <div class="input-group-append">
-            <button onclick="search()" class="btn btn-outline-secondary" type="button">검색</button>
+<!-- 회원가입 modal -->
+<div class="modal" id="loginModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">회원가입</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="form-group">
+                        <label for="post-url">아이디</label>
+                        <input id="post-id" class="form-control" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label for="post-comment">패스워드</label>
+                        <input id="post-pw" type="password" class="form-control" placeholder="">
+                    </div>
+                    <input id="post_id" class="form-control" placeholder="" hidden>
+                    <!-- http://tcpschool.com/html-input-types/hidden -->
+                    <!-- <input type=“hidden”>은 사용자에게는 보이지 않는 숨겨진 입력 필드를 정의 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveid()">회원가입</button>
+            </div>
         </div>
     </div>
+</div>
 
-</footer>
+
+<div class="modal" id="loginbuttonModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">회원가입</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div>
+                    <div class="form-group">
+                        <label for="post-url">아이디</label>
+                        <input id="post-id-1" class="form-control" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label for="post-comment">패스워드</label>
+                        <input id="post-pw-1" type="password" class="form-control" placeholder="">
+                    </div>
+                    <input id="post_id-1" class="form-control" placeholder="" hidden>
+                    <!-- http://tcpschool.com/html-input-types/hidden -->
+                    <!-- <input type=“hidden”>은 사용자에게는 보이지 않는 숨겨진 입력 필드를 정의 -->
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" id="lastlogin" class="btn btn-primary" onclick="loginid()">로그인</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </body>
 
 </html>
