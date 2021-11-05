@@ -177,7 +177,9 @@ def login_user():
 @app.route('/commentar', methods=['POST'])
 def comment_data():
     comment = request.form['comment_give']
+    title = request.form['title_give']
     doc = {
+        "title" : title,
         "comment": comment,
     }
     db.comment.insert_one(doc)
@@ -185,9 +187,10 @@ def comment_data():
 
 @app.route('/commentshow', methods=['GET'])
 def showcomment():
-    comment = list(db.comment.find({}, {'_id': False}))
+    title = request.form['title_give']
+    comment = list(db.comment.find({"title":title}, {'_id': False}))
     return jsonify({"comment": comment})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=8000)

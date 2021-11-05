@@ -315,11 +315,12 @@
         }
 
         function saveComment() {
+            let title = $('#modal-title').html();
             let comment = $("#comment").val() // modal-idx
             $.ajax({
                 type: "POST",
                 url: '/commentar',
-                data: {comment_give : comment},
+                data: {comment_give : comment, title_give:title},
                 success: function (response) {
                     alert(comment)
                     $("#show").load(window.location.href + " #show")
@@ -328,10 +329,11 @@
             })
         }
         function showcomment() {
+            let title = $('#modal-title').html();
             $.ajax({
                 type: "GET",
                 url: `/commentshow`,
-                data: {},
+                data: {title_give :  title},
                 success: function (response) {
                     let comment = response["comment"];
 
