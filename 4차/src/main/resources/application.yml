@@ -1,0 +1,11 @@
+cloud:
+  aws:
+    credentials:
+      accessKey: 나의 accessKey
+      secretKey: 나의 secretKey
+    s3:
+      bucket: 나의 bucket 이름
+    region:
+      static: ap-northeast-2	// 서울리젼
+    stack:
+      auto: false
